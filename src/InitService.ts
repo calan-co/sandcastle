@@ -168,10 +168,10 @@ const packageManagerDockerfileSnippet = (
   switch (packageManager) {
     case "pnpm":
       return `# Enable pnpm for sandbox dependency hooks
-RUN corepack enable`;
+RUN corepack enable && corepack prepare pnpm@latest --activate`;
     case "yarn":
       return `# Enable yarn for sandbox dependency hooks
-RUN corepack enable`;
+RUN corepack enable && corepack prepare yarn@stable --activate`;
     case "bun":
       return `# Install Bun for sandbox dependency hooks
 RUN npm install -g bun`;

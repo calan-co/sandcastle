@@ -235,12 +235,14 @@ describe("InitService scaffold", () => {
   it.each([
     {
       packageManager: "pnpm" as const,
-      expected: "RUN corepack enable",
+      expected:
+        "RUN corepack enable && corepack prepare pnpm@latest --activate",
       unexpected: "npm install -g bun",
     },
     {
       packageManager: "yarn" as const,
-      expected: "RUN corepack enable",
+      expected:
+        "RUN corepack enable && corepack prepare yarn@stable --activate",
       unexpected: "npm install -g bun",
     },
     {
@@ -2467,6 +2469,7 @@ describe("InitService scaffold", () => {
         "utf-8",
       );
       expect(containerfile).toContain("RUN corepack enable");
+      expect(containerfile).toContain("corepack prepare pnpm@latest");
       expect(containerfile).toContain(
         "# Enable pnpm for sandbox dependency hooks",
       );
