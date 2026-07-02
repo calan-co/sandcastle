@@ -616,17 +616,17 @@ describe("InitService scaffold", () => {
       expect(joined).toContain("npm run sandcastle");
     });
 
-    it("non-blank template includes a note about customizing the install command", () => {
+    it("non-blank template includes a note about sandbox install hooks", () => {
       const lines = next("simple-loop", "main.mts");
       const joined = lines.join("\n");
       expect(joined).toContain("npm install");
       expect(joined).toContain("onSandboxReady");
     });
 
-    it("non-blank template mentions copyToWorktree and node_modules", () => {
+    it("non-blank template mentions isolatedPaths and node_modules", () => {
       const lines = next("simple-loop", "main.mts");
       const joined = lines.join("\n");
-      expect(joined).toContain("copyToWorktree");
+      expect(joined).toContain("isolatedPaths");
       expect(joined).toContain("node_modules");
     });
 
@@ -2366,8 +2366,10 @@ describe("InitService scaffold", () => {
         "utf-8",
       );
       expect(mainTs).not.toContain("docker");
-      // parallel-planner calls the factory three times
-      expect(mainTs.match(/sandbox: podman\(\)/g)).toHaveLength(3);
+      expect(mainTs).toContain(
+        'const sandboxProvider = podman({ isolatedPaths: ["node_modules"] });',
+      );
+      expect(mainTs).toContain("sandbox: sandboxProvider");
     });
 
     it("selecting docker leaves the main file importing and calling docker", async () => {

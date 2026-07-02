@@ -631,6 +631,28 @@ describe("formatVolumeMount", () => {
       ),
     ).toBe("/host:/sandbox");
   });
+
+  it("formats anonymous mounts without a host path", () => {
+    expect(
+      formatVolumeMount(
+        { sandboxPath: "/sandbox/node_modules", anonymous: true },
+        false,
+      ),
+    ).toBe("/sandbox/node_modules");
+  });
+
+  it("formats readonly anonymous mounts with selinux options", () => {
+    expect(
+      formatVolumeMount(
+        {
+          sandboxPath: "/sandbox/node_modules",
+          anonymous: true,
+          readonly: true,
+        },
+        "z",
+      ),
+    ).toBe("/sandbox/node_modules:ro,z");
+  });
 });
 
 describe("processFileMountParents", () => {

@@ -291,7 +291,7 @@ import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 
 await using sandbox = await createSandbox({
   branch: "agent/fix-42",
-  sandbox: docker(),
+  sandbox: docker({ isolatedPaths: ["node_modules"] }),
   hooks: { sandbox: { onSandboxReady: [{ command: "npm install" }] } },
 });
 
@@ -311,12 +311,14 @@ const reviewResult = await sandbox.run({
 
 Commits from all `run()` calls accumulate on the same branch. The sandbox container stays alive between runs, so installed dependencies and build artifacts persist.
 
+If you install dependencies inside Docker/Podman hooks, use `isolatedPaths: ["node_modules"]` on the sandbox provider so Linux container installs do not overwrite host platform-specific binaries (for example, `@esbuild/darwin-arm64` on macOS hosts).
+
 `sandbox.exec()` lets the harness run shell commands directly in the same warm sandbox — handy for gating an implement step on a quick verification before kicking off the review:
 
 ```typescript
 await using sandbox = await createSandbox({
   branch: "agent/fix-42",
-  sandbox: docker(),
+  sandbox: docker({ isolatedPaths: ["node_modules"] }),
   hooks: { sandbox: { onSandboxReady: [{ command: "npm install" }] } },
 });
 
@@ -455,7 +457,7 @@ console.log(result.commits); // commits made during the run
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 
 await using sandbox = await wt.createSandbox({
-  sandbox: docker(),
+  sandbox: docker({ isolatedPaths: ["node_modules"] }),
   hooks: { sandbox: { onSandboxReady: [{ command: "npm install" }] } },
 });
 

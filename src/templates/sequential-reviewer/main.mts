@@ -38,10 +38,9 @@ const hooks = {
   sandbox: { onSandboxReady: [{ command: "npm install" }] },
 };
 
-// Copy node_modules from the host into the worktree before each sandbox
-// starts. Avoids a full npm install from scratch; the hook above handles
-// platform-specific binaries and any packages added since the last copy.
-const copyToWorktree = ["node_modules"];
+// Isolate node_modules from the host bind mount so in-container installs
+// don't overwrite host platform-specific binaries.
+const sandboxProvider = docker({ isolatedPaths: ["node_modules"] });
 
 // ---------------------------------------------------------------------------
 // Main loop
@@ -57,9 +56,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   // This gives both agents a real, named branch that persists across phases.
   const sandbox = await sandcastle.createSandbox({
     branch,
-    sandbox: docker(),
+    sandbox: sandboxProvider,
     hooks,
-    copyToWorktree,
   });
 
   try {

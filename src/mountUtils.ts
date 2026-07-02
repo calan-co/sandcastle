@@ -333,10 +333,15 @@ export const patchGitMountsForWindows = (
  * Used by both Podman and Docker providers.
  */
 export const formatVolumeMount = (
-  mount: { hostPath: string; sandboxPath: string; readonly?: boolean },
+  mount:
+    | { hostPath: string; sandboxPath: string; readonly?: boolean }
+    | { sandboxPath: string; readonly?: boolean; anonymous: true },
   selinuxLabel: SelinuxLabel | undefined,
 ): string => {
-  const base = `${mount.hostPath}:${mount.sandboxPath}`;
+  const base =
+    "hostPath" in mount
+      ? `${mount.hostPath}:${mount.sandboxPath}`
+      : mount.sandboxPath;
   const options = [mount.readonly ? "ro" : undefined, selinuxLabel || undefined]
     .filter((option): option is string => option !== undefined)
     .join(",");
