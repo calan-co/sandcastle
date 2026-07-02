@@ -146,6 +146,22 @@ export const addDependencyCommand = (
   }
 };
 
+/** Build the command that installs project dependencies inside the sandbox. */
+export const installDependenciesCommand = (
+  packageManager: PackageManager,
+): string => {
+  switch (packageManager) {
+    case "pnpm":
+      return "pnpm install";
+    case "yarn":
+      return "yarn install";
+    case "bun":
+      return "bun install";
+    case "npm":
+      return "npm install";
+  }
+};
+
 /**
  * Whether the host package.json already declares `pkg` in any of its dependency
  * maps. Used so init doesn't offer to install something already present.
@@ -672,7 +688,7 @@ export function getNextStepsLines(
     }
     lines.push(
       `${step++}. Add "sandcastle": "npx tsx .sandcastle/${mainFilename}" to your package.json scripts`,
-      `${step++}. Templates use isolated dependency mounts (for example, \`docker({ isolatedPaths: ["node_modules"] })\` or \`podman({ isolatedPaths: ["node_modules"] })\`) so sandbox installs stay isolated from host \`node_modules\` on macOS/Windows + Linux container workflows. Keep the \`npm install\` onSandboxReady hook (or your package manager equivalent) to ensure dependencies exist inside the sandbox`,
+      `${step++}. Templates use isolated dependency mounts (for example, \`docker({ isolatedPaths: ["node_modules"] })\` or \`podman({ isolatedPaths: ["node_modules"] })\`) so sandbox installs stay isolated from host \`node_modules\` on macOS/Windows + Linux container workflows. They run \`${installDependenciesCommand(packageManager)}\` in the onSandboxReady hook to ensure dependencies exist inside the sandbox`,
     );
     if (usesPlanSchema) {
       lines.push(
@@ -767,6 +783,7 @@ const rewriteMainTs = (
   model: string,
   sandboxProvider: SandboxProviderEntry,
   mainFilename: string,
+  packageManager: PackageManager,
 ): Effect.Effect<void, Error, FileSystem.FileSystem> =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -799,6 +816,15 @@ const rewriteMainTs = (
     content = content.replace(
       factoryCallRe,
       `${agent.factoryImport}("${model}")`,
+    );
+
+    content = content.replace(
+      /\/\/ npm install ensures the sandbox always has fresh dependencies\./g,
+      "// The install hook ensures the sandbox always has fresh dependencies.",
+    );
+    content = content.replace(
+      /command: "npm install"/g,
+      `command: "${installDependenciesCommand(packageManager)}"`,
     );
 
     // Replace the sandbox provider. Templates always use `docker` as the
@@ -983,6 +1009,7 @@ export interface ScaffoldOptions {
   createLabel?: boolean;
   issueTracker?: IssueTrackerEntry;
   sandboxProvider?: SandboxProviderEntry;
+  packageManager?: PackageManager;
 }
 
 export interface ScaffoldResult {
@@ -1026,6 +1053,7 @@ export const scaffold = (
       createLabel = true,
       issueTracker = ISSUE_TRACKER_REGISTRY[0]!, // default: github-issues
       sandboxProvider = SANDBOX_PROVIDER_REGISTRY[0]!, // default: docker
+      packageManager = "npm",
     } = options;
     const fs = yield* FileSystem.FileSystem;
     const configDir = join(repoDir, ".sandcastle");
@@ -1082,6 +1110,7 @@ export const scaffold = (
       model,
       sandboxProvider,
       mainFilename,
+      packageManager,
     );
 
     // Replace issue tracker template arguments in all text files (must run before label stripping)
