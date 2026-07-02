@@ -83,8 +83,10 @@ describe("podman()", () => {
       ([, args]) => Array.isArray(args) && args[0] === "run",
     )?.[1] as string[];
 
-    expect(runArgs).toContain("/home/agent/workspace/node_modules:z");
-    expect(runArgs).toContain("/home/agent/workspace/.next/cache:z");
+    expect(runArgs).toContain("/home/agent/workspace/node_modules");
+    expect(runArgs).toContain("/home/agent/workspace/.next/cache");
+    expect(runArgs).not.toContain("/home/agent/workspace/node_modules:z");
+    expect(runArgs).not.toContain("/home/agent/workspace/.next/cache:z");
 
     await handle.close();
   });

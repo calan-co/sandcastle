@@ -641,17 +641,17 @@ describe("formatVolumeMount", () => {
     ).toBe("/sandbox/node_modules");
   });
 
-  it("formats readonly anonymous mounts with selinux options", () => {
+  it("omits readonly and selinux options for anonymous mounts", () => {
     expect(
       formatVolumeMount(
         {
-          sandboxPath: "/sandbox/node_modules",
+          sandboxPath: "/home/agent/workspace/node_modules",
           anonymous: true,
           readonly: true,
         },
         "z",
       ),
-    ).toBe("/sandbox/node_modules:ro,z");
+    ).toBe("/home/agent/workspace/node_modules");
   });
 });
 
