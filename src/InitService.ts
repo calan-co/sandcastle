@@ -672,7 +672,7 @@ export function getNextStepsLines(
     }
     lines.push(
       `${step++}. Add "sandcastle": "npx tsx .sandcastle/${mainFilename}" to your package.json scripts`,
-      `${step++}. Templates use \`docker({ isolatedPaths: ["node_modules"] })\` so sandbox installs stay isolated from host \`node_modules\` on macOS/Windows + Linux container workflows. Keep the \`npm install\` onSandboxReady hook (or your package manager equivalent) to ensure dependencies exist inside the sandbox`,
+      `${step++}. Templates use isolated dependency mounts (for example, \`docker({ isolatedPaths: ["node_modules"] })\` or \`podman({ isolatedPaths: ["node_modules"] })\`) so sandbox installs stay isolated from host \`node_modules\` on macOS/Windows + Linux container workflows. Keep the \`npm install\` onSandboxReady hook (or your package manager equivalent) to ensure dependencies exist inside the sandbox`,
     );
     if (usesPlanSchema) {
       lines.push(
