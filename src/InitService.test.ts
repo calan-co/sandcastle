@@ -232,6 +232,41 @@ describe("InitService scaffold", () => {
     expect(dockerfile).not.toContain("pnpm");
   });
 
+  it.each([
+    {
+      packageManager: "pnpm" as const,
+      expected: "RUN corepack enable",
+      unexpected: "npm install -g bun",
+    },
+    {
+      packageManager: "yarn" as const,
+      expected: "RUN corepack enable",
+      unexpected: "npm install -g bun",
+    },
+    {
+      packageManager: "bun" as const,
+      expected: "RUN npm install -g bun",
+      unexpected: "RUN corepack enable",
+    },
+  ])(
+    "Dockerfile includes $packageManager for sandbox dependency hooks",
+    async ({ packageManager, expected, unexpected }) => {
+      const dir = await makeDir();
+      await runScaffold(dir, { packageManager });
+
+      const dockerfile = await readFile(
+        join(dir, ".sandcastle", "Dockerfile"),
+        "utf-8",
+      );
+      expect(dockerfile).toContain(expected);
+      expect(dockerfile).toContain(
+        `# ${packageManager === "bun" ? "Install Bun" : `Enable ${packageManager}`} for sandbox dependency hooks`,
+      );
+      expect(dockerfile).not.toContain(unexpected);
+      expect(dockerfile).not.toContain("{{ISSUE_TRACKER_TOOLS}}");
+    },
+  );
+
   it("skeleton prompt contains section headers and hints", async () => {
     const dir = await makeDir();
     await runScaffold(dir);
@@ -2417,6 +2452,24 @@ describe("InitService scaffold", () => {
         "utf-8",
       );
       expect(containerfile).toContain("FROM node:22-bookworm");
+      expect(containerfile).not.toContain("{{ISSUE_TRACKER_TOOLS}}");
+    });
+
+    it("selecting podman writes package manager tooling to Containerfile", async () => {
+      const dir = await makeDir();
+      await runScaffold(dir, {
+        sandboxProvider: podmanProvider,
+        packageManager: "pnpm",
+      });
+
+      const containerfile = await readFile(
+        join(dir, ".sandcastle", "Containerfile"),
+        "utf-8",
+      );
+      expect(containerfile).toContain("RUN corepack enable");
+      expect(containerfile).toContain(
+        "# Enable pnpm for sandbox dependency hooks",
+      );
       expect(containerfile).not.toContain("{{ISSUE_TRACKER_TOOLS}}");
     });
 

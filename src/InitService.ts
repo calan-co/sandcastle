@@ -162,6 +162,36 @@ export const installDependenciesCommand = (
   }
 };
 
+const packageManagerDockerfileSnippet = (
+  packageManager: PackageManager,
+): string => {
+  switch (packageManager) {
+    case "pnpm":
+      return `# Enable pnpm for sandbox dependency hooks
+RUN corepack enable`;
+    case "yarn":
+      return `# Enable yarn for sandbox dependency hooks
+RUN corepack enable`;
+    case "bun":
+      return `# Install Bun for sandbox dependency hooks
+RUN npm install -g bun`;
+    case "npm":
+      return "";
+  }
+};
+
+const addPackageManagerDockerfileSnippet = (
+  dockerfileTemplate: string,
+  packageManager: PackageManager,
+): string => {
+  const snippet = packageManagerDockerfileSnippet(packageManager);
+  if (!snippet) return dockerfileTemplate;
+  return dockerfileTemplate.replace(
+    "{{ISSUE_TRACKER_TOOLS}}",
+    `${snippet}\n\n{{ISSUE_TRACKER_TOOLS}}`,
+  );
+};
+
 /**
  * Whether the host package.json already declares `pkg` in any of its dependency
  * maps. Used so init doesn't offer to install something already present.
@@ -1089,7 +1119,10 @@ export const scaffold = (
         fs
           .writeFileString(
             join(configDir, sandboxProvider.containerfileName),
-            agent.dockerfileTemplate,
+            addPackageManagerDockerfileSnippet(
+              agent.dockerfileTemplate,
+              packageManager,
+            ),
           )
           .pipe(Effect.mapError((e) => new Error(e.message))),
         fs
